@@ -29,3 +29,15 @@ To build the documentation:
 To build examples:
 
     python make.py examples
+
+## Getting Started
+
+### Install
+```bash
+npm install
+```
+
+### Test
+```bash
+npm test
+```
