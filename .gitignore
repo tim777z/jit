@@ -8,3 +8,6 @@ Docs*
 *.jar
 *.zip
 *.*~
+node_modules/
+.env
+*.log
