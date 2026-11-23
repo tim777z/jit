@@ -1,5 +1,14 @@
+# Static preview of the toolkit sources and generated examples.
+#
+# The original definition used `build: .` but no Dockerfile exists, so
+# `docker compose up` failed. The legacy `serve.py` demo server also depends on
+# a vendored Python 2 web framework (end-of-life), so it is deliberately not
+# containerized. Use `python make.py examples` to generate static examples,
+# then browse them here.
 services:
-  app:
-    build: .
+  web:
+    image: nginx:1.27-alpine
     ports:
-      - "8080:8080"
+      - "8080:80"
+    volumes:
+      - .:/usr/share/nginx/html:ro

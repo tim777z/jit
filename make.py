@@ -32,8 +32,8 @@ def main():
 
 def make_docs():
     if not path.exists(NATURALDOCS):
-        print "Requires NaturalDocs %s." % NATURALDOCS_VER
-        print "http://www.naturaldocs.org/download.html"
+        print("Requires NaturalDocs %s." % NATURALDOCS_VER)
+        print("http://www.naturaldocs.org/download.html")
         return
 
     natural_docs_dir = path.join(NATURALDOCS, 'img')
@@ -73,7 +73,7 @@ def make_examples(fancy=False):
 
     for viz, tests in tests_model.items():
     #create example folder
-        if filter(has_example, tests):
+        if any(has_example(t) for t in tests):
             system('mkdir Examples/' + viz)
             count = 1
             for i, model in enumerate(tests):
@@ -123,8 +123,8 @@ def make_example(viz, ex, i, count, fancy):
 
     #create syntax highlighted code page
     if fancy:
-        begin = re.compile("[\s]*//[\s]?init ([a-zA-Z0-9]+)[\s]*")
-        end = re.compile('[\s]*//[\s]?end[\s]*')
+        begin = re.compile(r"[\s]*//[\s]?init ([a-zA-Z0-9]+)[\s]*")
+        end = re.compile(r'[\s]*//[\s]?end[\s]*')
         res = []
         ftest = open('Tests/' + viz + '/test' + stri + '.js', 'r')
         for l in ftest:
@@ -147,27 +147,27 @@ def make_example(viz, ex, i, count, fancy):
 
 def make_build(fancy=False):
     system('rm -rf Jit/*')
-    print "Building Examples..."
+    print("Building Examples...")
     make_examples(fancy)
     system('cp -r Examples Jit/')
-    print "Done. Building Extras..."
+    print("Done. Building Extras...")
     system('mkdir Jit/Extras && cp Extras/excanvas.js Jit/Extras/excanvas.js')
-    print "Done. Building Library..."
+    print("Done. Building Library...")
     lib = Build().build()
     license = open('LICENSE', 'r').read()
     f = open('Jit/jit.js', 'w')
     f.write(license)
     f.write(lib)
     f.close()
-    print "Done. Compressing Library..."
+    print("Done. Compressing Library...")
     f = open('Jit/jit-yc.js', 'w')
     f.write(license)
     f.close()
     system('java -jar Extras/' + YC + ' Jit/jit.js >> Jit/jit-yc.js')
-    print "Done. Zipping..."
+    print("Done. Zipping...")
     system('rm Jit.zip')
     system('zip -r Jit.zip Jit/')
-    print "Done, I guess."
+    print("Done, I guess.")
 
 
 if __name__ == "__main__":

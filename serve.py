@@ -16,14 +16,16 @@ render = {
 class testcase:
     def GET(self, type, number):
         number_int = int(number)
-        max = len(tests_model[type])
-        if number_int > max:
+        count = len(tests_model[type])
+        # URLs are attacker-controlled: reject 0 (which used to wrap around to
+        # the final test case) as well as out-of-range indices.
+        if number_int < 1 or number_int > count:
             return "Wrong test number"
-        
+
         name = type
         test = 'test' + number + '.js'
-                
-        model = tests_model[type][number_int -1]
+
+        model = tests_model[type][number_int - 1]
         title = model['Title']
         extras = model['Extras'][:]
         
@@ -33,7 +35,7 @@ class testcase:
         build = Build().build(build_config)
         
         includes = {
-            'left':  getattr(render['TestCases'], type + '/' + 'left')(model, type, number_int, max),
+            'left':  getattr(render['TestCases'], type + '/' + 'left')(model, type, number_int, count),
             'right': getattr(render['TestCases'], type + '/' + 'test' + number)(model),
         }
         

@@ -1,0 +1,18 @@
+{
+  "name": "jit",
+  "version": "2.0.2",
+  "private": true,
+  "description": "The JavaScript InfoVis Toolkit provides tools for creating Interactive Data Visualizations for the Web.",
+  "license": "MIT",
+  "homepage": "http://thejit.org",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test Tests",
+    "lint": "eslint \"Tests/*.test.js\" \"Tests/helpers/*.js\""
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1"
+  }
+}

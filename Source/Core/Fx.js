@@ -68,6 +68,7 @@ var Animation;
           var object = arguments[i];
           if ($.type(object) != 'object') continue;
           for (var key in object){
+              if (key === '__proto__') continue;
               var op = object[key], mp = mix[key];
               if (mp && $.type(op) == 'object' && $.type(mp) == 'object') {
                 mix[key] = $.merge(mp, op);

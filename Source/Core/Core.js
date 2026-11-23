@@ -70,7 +70,8 @@ $.empty = function() {
 */
 $.extend = function(original, extended) {
   for ( var key in (extended || {}))
-    original[key] = extended[key];
+    // Never let data sourced from JSON invoke Object.prototype's __proto__ setter.
+    if (key !== '__proto__') original[key] = extended[key];
   return original;
 };
 
@@ -217,6 +218,7 @@ $.merge = function() {
     if ($.type(object) != 'object')
       continue;
     for ( var key in object) {
+      if (key === '__proto__') continue;
       var op = object[key], mp = mix[key];
       mix[key] = (mp && $.type(op) == 'object' && $.type(mp) == 'object') ? $
           .merge(mp, op) : $.unlink(op);
@@ -231,7 +233,7 @@ $.unlink = function(object) {
   case 'object':
     unlinked = {};
     for ( var p in object)
-      unlinked[p] = $.unlink(object[p]);
+      if (p !== '__proto__') unlinked[p] = $.unlink(object[p]);
     break;
   case 'array':
     unlinked = [];

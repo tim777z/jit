@@ -1,0 +1,29 @@
+{
+  "features": [
+    {
+      "id": "fresh-clone-install-and-tests",
+      "status": "verified",
+      "test": "npm ci && npm test"
+    },
+    {
+      "id": "graph-input-hardening",
+      "status": "verified",
+      "test": "npm test"
+    },
+    {
+      "id": "lint-audit-ci",
+      "status": "verified",
+      "test": "npm run lint && npm audit --audit-level=high"
+    },
+    {
+      "id": "python3-build-toolchain",
+      "status": "verified",
+      "test": "python -m py_compile build.py make.py serve.py tests.py && python -m unittest discover -s tests_python -v"
+    },
+    {
+      "id": "docs-and-container-fix",
+      "status": "verified",
+      "test": "static validation (Docker unreachable in this session)"
+    }
+  ]
+}
