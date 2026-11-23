@@ -1,0 +1,16 @@
+{
+  "root": true,
+  "env": {
+    "es2022": true,
+    "node": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "script"
+  },
+  "rules": {
+    "eqeqeq": ["error", "always"],
+    "no-undef": "error",
+    "no-unused-vars": ["error", { "args": "after-used" }]
+  }
+}

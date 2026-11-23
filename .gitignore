@@ -5,6 +5,10 @@ Extras/sh/
 NaturalDocs*
 Docs*
 *.pyc
+__pycache__/
 *.jar
 *.zip
 *.*~
+node_modules/
+.npm/
+npm-debug.log*

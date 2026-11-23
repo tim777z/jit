@@ -95,7 +95,8 @@ $.empty = function() {
 */
 $.extend = function(original, extended) {
   for ( var key in (extended || {}))
-    original[key] = extended[key];
+    // Never let data sourced from JSON invoke Object.prototype's __proto__ setter.
+    if (key !== '__proto__') original[key] = extended[key];
   return original;
 };
 
@@ -242,6 +243,7 @@ $.merge = function() {
     if ($.type(object) != 'object')
       continue;
     for ( var key in object) {
+      if (key === '__proto__') continue;
       var op = object[key], mp = mix[key];
       mix[key] = (mp && $.type(op) == 'object' && $.type(mp) == 'object') ? $
           .merge(mp, op) : $.unlink(op);
@@ -256,7 +258,7 @@ $.unlink = function(object) {
   case 'object':
     unlinked = {};
     for ( var p in object)
-      unlinked[p] = $.unlink(object[p]);
+      if (p !== '__proto__') unlinked[p] = $.unlink(object[p]);
     break;
   case 'array':
     unlinked = [];
@@ -4021,12 +4023,15 @@ $jit.Graph = new Class({
     this.Edge = Edge;
     this.Label = Label;
     this.opt = $.merge(innerOptions, opt || {});
-    this.nodes = {};
-    this.edges = {};
-    
+    // Null-prototype maps keep ids such as "toString" or "__proto__" as plain
+    // data keys. Visualization JSON can be attacker-controlled, so inherited
+    // Object.prototype properties must never make a node appear to exist.
+    this.nodes = Object.create(null);
+    this.edges = Object.create(null);
+
     //add nodeList methods
     var that = this;
-    this.nodeList = {};
+    this.nodeList = Object.create(null);
     for(var p in Accessors) {
       that.nodeList[p] = (function(p) {
         return function() {
@@ -4136,9 +4141,12 @@ $jit.Graph = new Class({
     <Graph.Node>
 
   */  
-  addNode: function(obj) { 
-   if(!this.nodes[obj.id]) {  
-     var edges = this.edges[obj.id] = {};
+  addNode: function(obj) {
+   if(!obj || obj.id === undefined || obj.id === null) {
+     throw new TypeError('Graph.addNode requires an object with an id');
+   }
+   if(!this.hasNode(obj.id)) {
+     var edges = this.edges[obj.id] = Object.create(null);
      this.nodes[obj.id] = new Graph.Node($.extend({
         'id': obj.id,
         'name': obj.name,
@@ -4169,12 +4177,16 @@ $jit.Graph = new Class({
     <Graph.Node>, <Graph.Adjacence>
     */  
   addAdjacence: function (obj, obj2, data) {
+    if(!obj || obj.id === undefined || obj.id === null ||
+       !obj2 || obj2.id === undefined || obj2.id === null) {
+      throw new TypeError('Graph.addAdjacence requires two objects with ids');
+    }
     if(!this.hasNode(obj.id)) { this.addNode(obj); }
     if(!this.hasNode(obj2.id)) { this.addNode(obj2); }
     obj = this.nodes[obj.id]; obj2 = this.nodes[obj2.id];
     if(!obj.adjacentTo(obj2)) {
-      var adjsObj = this.edges[obj.id] = this.edges[obj.id] || {};
-      var adjsObj2 = this.edges[obj2.id] = this.edges[obj2.id] || {};
+      var adjsObj = this.edges[obj.id] = this.edges[obj.id] || Object.create(null);
+      var adjsObj2 = this.edges[obj2.id] = this.edges[obj2.id] || Object.create(null);
       adjsObj[obj2.id] = adjsObj2[obj.id] = new Graph.Adjacence(obj, obj2, data, this.Edge, this.Label);
       return adjsObj[obj2.id];
     }
@@ -4194,9 +4206,9 @@ $jit.Graph = new Class({
   removeNode: function(id) {
     if(this.hasNode(id)) {
       delete this.nodes[id];
-      var adjs = this.edges[id];
+      var adjs = this.edges[id] || Object.create(null);
       for(var to in adjs) {
-        delete this.edges[to][id];
+        if(this.edges[to]) delete this.edges[to][id];
       }
       delete this.edges[id];
     }
@@ -4213,8 +4225,11 @@ $jit.Graph = new Class({
      id2 - (string) A <Graph.Node> id.
 */  
   removeAdjacence: function(id1, id2) {
+    // A missing endpoint used to throw a TypeError here; report it instead.
+    if(!this.hasNode(id1) || !this.hasNode(id2)) return false;
     delete this.edges[id1][id2];
     delete this.edges[id2][id1];
+    return true;
   },
 
    /*
@@ -4227,7 +4242,7 @@ $jit.Graph = new Class({
         id - (string) Node id.
    */  
   hasNode: function(id) {
-    return id in this.nodes;
+    return Object.prototype.hasOwnProperty.call(this.nodes, id);
   },
   
   /*
@@ -4236,7 +4251,10 @@ $jit.Graph = new Class({
     Empties the Graph
 
   */
-  empty: function() { this.nodes = {}; this.edges = {};}
+  empty: function() {
+    this.nodes = Object.create(null);
+    this.edges = Object.create(null);
+  }
 
 });
 
@@ -5373,7 +5391,9 @@ Graph.Util = {
 };
 
 //Append graph methods to <Graph>
-$.each(['get', 'getNode', 'each', 'eachNode', 'computeLevels', 'eachBFS', 'clean', 'getClosestNodeToPos', 'getClosestNodeToOrigin'], function(m) {
+//'get' is deliberately omitted: Graph already defines it as an alias for
+//getNode, and Graph.Util has no 'get' method to delegate to here.
+$.each(['getNode', 'each', 'eachNode', 'computeLevels', 'eachBFS', 'clean', 'getClosestNodeToPos', 'getClosestNodeToOrigin'], function(m) {
   Graph.prototype[m] = function() {
     return Graph.Util[m].apply(Graph.Util, [this].concat(Array.prototype.slice.call(arguments)));
   };

@@ -4,11 +4,36 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+
+# CI never needs write access to the repository or packages.
+permissions:
+  contents: read
+
 jobs:
-  test:
+  javascript:
+    name: Node.js
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-      - run: npm ci
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # Skip lifecycle scripts: the only dev dependency is ESLint.
+      - run: npm ci --ignore-scripts
+      - run: npm run lint
+      - run: npm audit --audit-level=high
       - run: npm test
+
+  python:
+    name: Python build tooling
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check build tool syntax
+        run: python -m py_compile build.py make.py serve.py tests.py
+      - name: Run build tool smoke tests
+        run: python -m unittest discover -s tests_python -v
